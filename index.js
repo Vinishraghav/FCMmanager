@@ -8,14 +8,18 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-// Initialize Firebase Admin SDK
-const serviceAccount = require('./serviceAccountKey.json');
-
+// ✅ Initialize Firebase Admin SDK using environment variables
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    privateKeyId: process.env.FIREBASE_PRIVATE_KEY_ID,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // handle escaped \n
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    clientId: process.env.FIREBASE_CLIENT_ID,
+  }),
 });
 
-// POST endpoint to send notification
+// ✅ POST endpoint to send notification
 app.post('/sendNotification', async (req, res) => {
   try {
     const { friendFcmToken, title, body } = req.body;
@@ -37,11 +41,11 @@ app.post('/sendNotification', async (req, res) => {
     return res.status(200).json({ success: true, response });
   } catch (error) {
     console.error('Error sending notification:', error);
-    return res.status(500).json({ success: false, error });
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Start server
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(Server running on port ${PORT});
